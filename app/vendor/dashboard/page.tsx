@@ -1,74 +1,103 @@
-'use client';
-import { useState } from 'react';
+'use client'
 
-export default function VendorDashboard() {
-  const [products, setProducts] = useState([
-    { id: 1, name: 'Kente Print Everyday Tote', price: 150, category: 'Textiles' }
-  ]);
-  const [newName, setNewName] = useState('');
-  const [newPrice, setNewPrice] = useState('');
-  const [newCategory, setNewCategory] = useState('Textiles');
+import { useMemo, useState } from 'react'
+import Link from 'next/link'
+import { Boxes, Package, Plus, Star, TrendingUp } from 'lucide-react'
+import { SiteNav } from '@/components/site-nav'
+import { formatPrice, useStore } from '@/lib/store'
 
-  const handleAddProduct = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newName || !newPrice) return;
-    
-    const newProd = {
-      id: products.length + 1,
-      name: newName,
-      price: parseFloat(newPrice),
-      category: newCategory
-    };
-    
-    setProducts([...products, newProd]);
-    alert(`🎉 Successfully added "${newName}" to Akwaaba Mall storefront layout!`);
-    setNewName('');
-    setNewPrice('');
-  };
+const categories = ['Fragrances & Beauty', 'Fashion & Bags', 'Phones & Tablets', 'Electronics', 'Home & Kitchen', 'Groceries & Provisions', 'Health & Personal Care', 'Baby, Kids & Toys', 'General Items']
+
+export default function VendorDashboardPage() {
+  const { products, addProduct, orders, ratingFor } = useStore()
+  const [form, setForm] = useState({ name: '', price: '', category: categories[0], description: '' })
+  const [justAdded, setJustAdded] = useState<string | null>(null)
+
+  const handleAdd = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    const price = Number.parseFloat(form.price)
+    if (!form.name || Number.isNaN(price) || price <= 0) return
+    const product = addProduct({ name: form.name, price, category: form.category, description: form.description })
+    setJustAdded(product.name)
+    setForm({ name: '', price: '', category: categories[0], description: '' })
+  }
+
+  const stats = useMemo(() => {
+    const orderedItems = orders.flatMap((order) => order.items)
+    const unitsSold = orderedItems.reduce((sum, item) => sum + item.qty, 0)
+    const revenue = orderedItems.reduce((sum, item) => sum + item.price * item.qty, 0)
+    return { listings: products.length, unitsSold, revenue, orders: orders.length }
+  }, [orders, products.length])
 
   return (
-    <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h2 style={{ color: '#333' }}>🏪 Vendor Command Center</h2>
-      <p style={{ color: '#666' }}>Manage your shop inventory across Ghana</p>
-      
-      <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px', background: '#f9f9f9', marginBottom: '25px' }}>
-        <h4>➕ List a New Product</h4>
-        <form onSubmit={handleAddProduct} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Item Name</label>
-            <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Price (GHS)</label>
-            <input type="number" value={newPrice} onChange={(e) => setNewPrice(e.target.value)} required style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }} />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Category</label>
-            <select value={newCategory} onChange={(e) => setNewCategory(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: '5px', border: '1px solid #ccc' }}>
-              <option value="Textiles">Textiles & Fabrics</option>
-              <option value="Beauty">Fragrances & Beauty</option>
-              <option value="Food">Food & Spices</option>
-              <option value="Crafts">Authentic Crafts</option>
-            </select>
-          </div>
-          <button type="submit" style={{ background: '#3bb75e', color: '#fff', border: 'none', padding: '12px', borderRadius: '5px', fontWeight: 'bold', fontSize: '16px', marginTop: '5px' }}>
-            Publish Item Live
-          </button>
-        </form>
-      </div>
+    <main className="min-h-screen bg-background text-foreground">
+      <SiteNav />
 
-      <div style={{ border: '1px solid #ddd', padding: '15px', borderRadius: '8px' }}>
-        <h4>📦 Your Active Listings</h4>
-        {products.map(p => (
-          <div key={p.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px solid #eee' }}>
-            <div>
-              <strong>{p.name}</strong> <br />
-              <span style={{ fontSize: '12px', color: '#888' }}>{p.category}</span>
-            </div>
-            <strong style={{ color: '#ffa500' }}>GHS {p.price}.00</strong>
+      <section className="mx-auto max-w-6xl px-4 py-10 lg:px-8">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-primary">Vendor portal</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight">Command center</h1>
+            <p className="mt-1 text-sm text-muted-foreground">Manage your listings and track sales across Ghana.</p>
           </div>
-        ))}
-      </div>
-    </div>
-  );
+          <Link href="/vendor" className="rounded-xl border border-border px-4 py-2.5 text-sm font-semibold transition hover:bg-muted">Store settings</Link>
+        </div>
+
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-2xl border border-border bg-card p-5"><Boxes className="size-5 text-primary" /><p className="mt-3 text-2xl font-bold">{stats.listings}</p><p className="text-sm text-muted-foreground">Active listings</p></div>
+          <div className="rounded-2xl border border-border bg-card p-5"><Package className="size-5 text-primary" /><p className="mt-3 text-2xl font-bold">{stats.orders}</p><p className="text-sm text-muted-foreground">Orders</p></div>
+          <div className="rounded-2xl border border-border bg-card p-5"><TrendingUp className="size-5 text-primary" /><p className="mt-3 text-2xl font-bold">{stats.unitsSold}</p><p className="text-sm text-muted-foreground">Units sold</p></div>
+          <div className="rounded-2xl border border-border bg-card p-5"><span className="text-sm font-bold text-primary">GH&#8373;</span><p className="mt-3 text-2xl font-bold">{stats.revenue.toLocaleString('en-GH')}</p><p className="text-sm text-muted-foreground">Gross revenue</p></div>
+        </div>
+
+        <div className="mt-8 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="h-fit rounded-3xl border border-border bg-card p-6">
+            <h2 className="flex items-center gap-2 text-lg font-bold"><Plus className="size-5 text-primary" /> List a new product</h2>
+            <form onSubmit={handleAdd} className="mt-5 grid gap-4">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium" htmlFor="name">Item name</label>
+                <input id="name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="e.g. Handwoven Basket" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium" htmlFor="price">Price (GH&#8373;)</label>
+                <input id="price" type="number" min="1" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} required className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="150" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium" htmlFor="category">Category</label>
+                <select id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring">
+                  {categories.map((category) => <option key={category}>{category}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium" htmlFor="description">Description</label>
+                <textarea id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="min-h-24 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="Tell buyers what makes this item special." />
+              </div>
+              <button type="submit" className="rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Publish item</button>
+              {justAdded && <p className="rounded-xl bg-primary/10 p-3 text-sm font-medium text-primary">&ldquo;{justAdded}&rdquo; is now live on Akwaaba Mall.</p>}
+            </form>
+          </div>
+
+          <div className="rounded-3xl border border-border bg-card p-6">
+            <h2 className="flex items-center gap-2 text-lg font-bold"><Package className="size-5 text-primary" /> Your listings</h2>
+            <div className="mt-5 divide-y divide-border">
+              {products.map((product) => {
+                const rating = ratingFor(product.id)
+                return (
+                  <div key={product.id} className="flex items-center gap-4 py-4">
+                    <img src={product.image || "/placeholder.svg"} alt={product.name} className="size-14 shrink-0 rounded-xl bg-secondary object-cover" />
+                    <div className="min-w-0 flex-1">
+                      <Link href={`/product/${product.id}`} className="line-clamp-1 text-sm font-semibold hover:text-primary">{product.name}</Link>
+                      <p className="mt-0.5 text-xs text-muted-foreground">{product.category}</p>
+                      {rating.count > 0 && <p className="mt-1 flex items-center gap-1 text-xs"><Star className="size-3 fill-accent text-accent" /> {rating.average} ({rating.count})</p>}
+                    </div>
+                    <span className="shrink-0 text-sm font-bold text-primary">{formatPrice(product.price)}</span>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  )
 }
