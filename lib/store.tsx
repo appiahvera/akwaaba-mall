@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
 export type Product = {
   id: number
@@ -110,12 +110,34 @@ type StoreValue = {
 const StoreContext = createContext<StoreValue | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(seededProducts)
-  const [reviews, setReviews] = useState<Review[]>(seededReviews)
+  const [products, setProducts] = useState<Product[]>([])
+  const [reviews, setReviews] = useState<Review[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [cart, setCart] = useState<CartLine[]>([])
   const [user, setUser] = useState<User | null>(null)
   const [accounts, setAccounts] = useState<(User & { password: string })[]>([])
+
+  useEffect(() => {
+    try {
+      const savedProducts = window.localStorage.getItem('akwaaba-products')
+      const savedUser = window.localStorage.getItem('akwaaba-user')
+      const savedAccounts = window.localStorage.getItem('akwaaba-accounts')
+      if (savedProducts) setProducts(JSON.parse(savedProducts))
+      if (savedUser) setUser(JSON.parse(savedUser))
+      if (savedAccounts) setAccounts(JSON.parse(savedAccounts))
+    } catch {
+      window.localStorage.removeItem('akwaaba-products')
+      window.localStorage.removeItem('akwaaba-user')
+      window.localStorage.removeItem('akwaaba-accounts')
+    }
+  }, [])
+
+  useEffect(() => { window.localStorage.setItem('akwaaba-products', JSON.stringify(products)) }, [products])
+  useEffect(() => {
+    if (user) window.localStorage.setItem('akwaaba-user', JSON.stringify(user))
+    else window.localStorage.removeItem('akwaaba-user')
+  }, [user])
+  useEffect(() => { window.localStorage.setItem('akwaaba-accounts', JSON.stringify(accounts)) }, [accounts])
 
   const value = useMemo<StoreValue>(() => {
     const findProduct = (id: number) => products.find((p) => p.id === id)
