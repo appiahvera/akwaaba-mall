@@ -59,7 +59,7 @@ export default function AccountPage() {
             {error && <p className="text-sm font-medium text-destructive">{error}</p>}
             <button type="submit" className="mt-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">{mode === 'login' ? 'Log in' : 'Create account'}</button>
           </form>
-          <p className="mt-4 text-center text-xs text-muted-foreground">Demo authentication — data is stored in memory for this session only.</p>
+          <p className="mt-4 text-center text-xs text-muted-foreground">Your session stays active on this device until you log out.</p>
         </section>
       ) : (
         <section className="mx-auto max-w-4xl px-4 py-10 lg:px-8">
