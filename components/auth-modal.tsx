@@ -14,7 +14,7 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole = 'buyer' }: AuthModalProps) {
   const router = useRouter()
-  const { register, login } = useStore()
+  const { register, login, loginWithGoogle } = useStore()
   const [mode, setMode] = useState<'login' | 'register'>(initialMode)
   const [role, setRole] = useState<'buyer' | 'vendor'>(initialRole)
   const [showPassword, setShowPassword] = useState(false)
@@ -59,6 +59,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
+  const handleGoogleSignIn = () => {
+    setError('')
+    loginWithGoogle(role)
+    onClose()
+    router.push(role === 'vendor' ? '/vendor/dashboard' : '/account')
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError('')
@@ -90,6 +97,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
           password: form.password,
           phone: form.phone,
           region: form.region,
+          role,
         })
         onClose()
         if (role === 'vendor') {
@@ -139,7 +147,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
           </button>
         </div>
 
-        <button className="mt-5 w-full rounded-xl border border-input bg-muted/50 px-4 py-3 text-sm font-semibold transition hover:bg-muted flex items-center justify-center gap-2">
+        <button type="button" onClick={handleGoogleSignIn} className="mt-5 w-full rounded-xl border border-input bg-muted/50 px-4 py-3 text-sm font-semibold transition hover:bg-muted flex items-center justify-center gap-2">
           <Chrome className="size-4" />
           Continue with Google
         </button>

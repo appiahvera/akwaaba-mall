@@ -21,7 +21,7 @@ export default function AccountPage() {
       const ok = login(form.email, form.password)
       if (!ok) setError('No account matches those details. Try registering first.')
     } else {
-      register({ name: form.name, email: form.email, password: form.password, phone: form.phone, region: form.region })
+      register({ name: form.name, email: form.email, password: form.password, phone: form.phone, region: form.region, role: 'buyer' })
     }
   }
 
@@ -106,7 +106,7 @@ export default function AccountPage() {
                     ))}
                   </div>
                   <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
-                    <span className="text-sm text-muted-foreground">Total incl. delivery</span>
+                    <span className="text-sm text-muted-foreground">Total (item price)</span>
                     <span className="font-bold">{formatPrice(order.total)}</span>
                   </div>
                   {order.status === 'held' ? (

@@ -30,7 +30,6 @@ export type Order = {
   reference: string
   items: { productId: number; name: string; price: number; qty: number }[]
   subtotal: number
-  deliveryFee: number
   region: string
   total: number
   status: OrderStatus
@@ -43,42 +42,8 @@ export type User = {
   email: string
   phone: string
   region: string
+  role: 'buyer' | 'vendor'
 }
-
-const seededProducts: Product[] = [
-  { id: 1, name: 'Glow Radiance Body Mist', category: 'Fragrances & Beauty', price: 185, seller: 'Nana Beauty Hub', image: '/placeholder.svg?height=480&width=480', description: 'A long-lasting, lightweight body mist with warm floral notes, bottled by a trusted Accra beauty vendor.' },
-  { id: 2, name: 'Samsung Galaxy A15 128GB', category: 'Phones & Tablets', price: 2499, seller: 'Tech Junction GH', image: '/placeholder.svg?height=480&width=480', description: 'Brand-new sealed Galaxy A15 with 128GB storage, 6.5-inch display and a full local warranty.' },
-  { id: 3, name: 'Kente Print Everyday Tote', category: 'Fashion & Bags', price: 145, seller: 'Adwoa Finds', image: '/placeholder.svg?height=480&width=480', description: 'A durable everyday tote made with authentic kente print fabric and reinforced handles.' },
-  { id: 4, name: 'Premium Baby Diapers • Size 4', category: 'Baby, Kids & Toys', price: 210, seller: 'Little Sprouts', image: '/placeholder.svg?height=480&width=480', description: 'Soft, highly absorbent size 4 diapers, gentle on delicate skin for all-day comfort.' },
-  { id: 5, name: 'Non-stick Cookware Set', category: 'Home & Kitchen', price: 680, seller: 'Home Comfort GH', image: '/placeholder.svg?height=480&width=480', description: 'A complete non-stick cookware set built for busy Ghanaian kitchens, easy to clean and long lasting.' },
-  { id: 6, name: 'Natural Shea Butter • 500g', category: 'Health & Personal Care', price: 78, seller: 'Savanna Naturals', image: '/placeholder.svg?height=480&width=480', description: 'Raw, unrefined shea butter sourced from the north of Ghana, perfect for skin and hair.' },
-]
-
-const seededReviews: Review[] = [
-  { id: 'r1', productId: 1, author: 'Ama K.', rating: 5, text: 'Smells amazing and lasts all day. Delivery to Kumasi was fast!', date: '2026-08-02' },
-  { id: 'r2', productId: 1, author: 'Kojo M.', rating: 4, text: 'Good value, packaging could be better but the product is great.', date: '2026-08-10' },
-  { id: 'r3', productId: 2, author: 'Yaw D.', rating: 5, text: 'Genuine sealed phone, escrow made me feel safe paying online.', date: '2026-07-21' },
-  { id: 'r4', productId: 6, author: 'Efua A.', rating: 5, text: 'Pure shea butter, exactly like the ones from home. Will reorder.', date: '2026-08-15' },
-]
-
-export const REGION_FEES: { name: string; fee: number }[] = [
-  { name: 'Greater Accra', fee: 30 },
-  { name: 'Ashanti', fee: 45 },
-  { name: 'Western', fee: 50 },
-  { name: 'Central', fee: 40 },
-  { name: 'Eastern', fee: 40 },
-  { name: 'Volta', fee: 45 },
-  { name: 'Northern', fee: 60 },
-  { name: 'Upper East', fee: 65 },
-  { name: 'Upper West', fee: 65 },
-  { name: 'Bono', fee: 50 },
-  { name: 'Bono East', fee: 55 },
-  { name: 'Ahafo', fee: 55 },
-  { name: 'Oti', fee: 50 },
-  { name: 'North East', fee: 60 },
-  { name: 'Savannah', fee: 60 },
-  { name: 'Western North', fee: 55 },
-]
 
 export const PLATFORM_FEE_RATE = 0.05
 
@@ -100,10 +65,11 @@ type StoreValue = {
   removeFromCart: (productId: number) => void
   clearCart: () => void
   cartCount: number
-  placeOrder: (input: { region: string; deliveryFee: number }) => Order
+  placeOrder: (input: { region: string }) => Order
   releaseOrder: (orderId: string) => void
   register: (input: User & { password: string }) => void
   login: (email: string, password: string) => boolean
+  loginWithGoogle: (role: 'buyer' | 'vendor') => void
   logout: () => void
 }
 
@@ -193,7 +159,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       removeFromCart: (productId) => setCart((prev) => prev.filter((line) => line.productId !== productId)),
       clearCart: () => setCart([]),
       cartCount: cart.reduce((sum, line) => sum + line.qty, 0),
-      placeOrder: ({ region, deliveryFee }) => {
+      placeOrder: ({ region }) => {
         const items = cart.map((line) => {
           const product = findProduct(line.productId)!
           return { productId: line.productId, name: product.name, price: product.price, qty: line.qty }
@@ -204,9 +170,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           reference: `AKW-${Date.now()}`,
           items,
           subtotal,
-          deliveryFee,
           region,
-          total: subtotal + deliveryFee,
+          total: subtotal,
           status: 'held',
           date: new Date().toISOString().slice(0, 10),
           buyerEmail: user?.email || 'guest@akwaaba.gh',
@@ -217,16 +182,28 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       },
       releaseOrder: (orderId) => setOrders((prev) => prev.map((order) => (order.id === orderId ? { ...order, status: 'released' } : order))),
       register: (input) => {
-        setAccounts((prev) => [...prev.filter((a) => a.email !== input.email), input])
-        setUser({ name: input.name, email: input.email, phone: input.phone, region: input.region })
+        const account = { ...input, role: input.role ?? 'buyer' }
+        setAccounts((prev) => [...prev.filter((a) => a.email !== input.email), account])
+        setUser({ name: input.name, email: input.email, phone: input.phone, region: input.region, role: account.role })
       },
       login: (email, password) => {
         const match = accounts.find((a) => a.email === email && a.password === password)
         if (match) {
-          setUser({ name: match.name, email: match.email, phone: match.phone, region: match.region })
+          setUser({ name: match.name, email: match.email, phone: match.phone, region: match.region, role: match.role ?? 'buyer' })
           return true
         }
         return false
+      },
+      loginWithGoogle: (role) => {
+        const googleUser: User = {
+          name: role === 'vendor' ? 'Akwaaba Vendor' : 'Akwaaba Shopper',
+          email: role === 'vendor' ? 'vendor@gmail.com' : 'shopper@gmail.com',
+          phone: '',
+          region: 'Greater Accra',
+          role,
+        }
+        setAccounts((prev) => [...prev.filter((a) => a.email !== googleUser.email), { ...googleUser, password: `google-${Date.now()}` }])
+        setUser(googleUser)
       },
       logout: () => setUser(null),
     }
