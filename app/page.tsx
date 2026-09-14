@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import { Search, ShoppingBag, UserRound, Menu, Heart, Star, MapPin, ChevronRight, SlidersHorizontal, X, MessageCircle, ShieldCheck, Truck, Sparkles } from 'lucide-react'
 import { AuthModal } from '@/components/auth-modal'
-import { useStore, formatPrice as formatStorePrice, type Product } from '@/lib/store'
+import { useStore, formatPrice as formatStorePrice, whatsappLink, type Product } from '@/lib/store'
 
 const regions = ['Greater Accra', 'Ashanti', 'Northern', 'Western', 'Eastern', 'Central', 'Volta', 'Bono', 'Ahafo', 'Bono East', 'Upper East', 'Upper West', 'Oti', 'Savannah', 'North East', 'Western North']
 const categories = ['All products', 'Baby, Kids & Toys', 'Fragrances & Beauty', 'Fashion & Bags', 'Phones & Tablets', 'Electronics', 'Home & Kitchen', 'Groceries & Provisions', 'Health & Personal Care', 'General Items']
@@ -56,7 +56,7 @@ export default function HomePage() {
     return matchesCategory && matchesQuery
   }), [category, query])
   const cartTotal = cart.reduce((sum, id) => sum + (products.find((p) => p.id === id)?.price ?? 0), 0)
-  const selectedWhatsApp = selectedProduct ? `https://wa.me/233500000000?text=${encodeURIComponent(`Hi! I'm interested in buying ${selectedProduct.name} (${formatPrice(selectedProduct.price)}) on Akwaaba Mall. Is this currently available?`)}` : '#'
+  const selectedWhatsApp = selectedProduct ? whatsappLink(selectedProduct.sellerWhatsapp, `Hi! I'm interested in buying ${selectedProduct.name} (${formatPrice(selectedProduct.price)}) on Akwaaba Mall. Is this currently available?`) : '#'
   const initializePaystack = () => {
     if (!isLoggedIn) { setShowCheckout(false); openAuth('login'); return }
     setPaymentStatus('held')
