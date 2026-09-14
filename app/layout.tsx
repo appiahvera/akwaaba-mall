@@ -22,8 +22,8 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image', title: 'Akwaaba Mall | Shop Ghana Online', description: 'Ghana’s everyday marketplace for trusted local vendors.' },
   icons: {
-    icon: '/akwaaba-logo.png',
-    apple: '/akwaaba-logo.png',
+    icon: '/icon.png',
+    apple: '/icon.png',
   },
   manifest: '/manifest.webmanifest',
 }
