@@ -83,27 +83,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [accounts, setAccounts] = useState<(User & { password: string })[]>([])
 
+  const [hydrated, setHydrated] = useState(false)
+
   useEffect(() => {
     try {
       const savedProducts = window.localStorage.getItem('akwaaba-products')
-      const savedUser = window.localStorage.getItem('akwaaba-user')
+      const savedReviews = window.localStorage.getItem('akwaaba-reviews')
+      const savedOrders = window.localStorage.getItem('akwaaba-orders')
+      const savedUser = window.localStorage.getItem('account_session_active')
       const savedAccounts = window.localStorage.getItem('akwaaba-accounts')
       if (savedProducts) setProducts(JSON.parse(savedProducts))
+      if (savedReviews) setReviews(JSON.parse(savedReviews))
+      if (savedOrders) setOrders(JSON.parse(savedOrders))
       if (savedUser) setUser(JSON.parse(savedUser))
       if (savedAccounts) setAccounts(JSON.parse(savedAccounts))
     } catch {
       window.localStorage.removeItem('akwaaba-products')
-      window.localStorage.removeItem('akwaaba-user')
+      window.localStorage.removeItem('akwaaba-reviews')
+      window.localStorage.removeItem('akwaaba-orders')
+      window.localStorage.removeItem('account_session_active')
       window.localStorage.removeItem('akwaaba-accounts')
     }
+    setHydrated(true)
   }, [])
 
-  useEffect(() => { window.localStorage.setItem('akwaaba-products', JSON.stringify(products)) }, [products])
+  useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-products', JSON.stringify(products)) }, [products, hydrated])
+  useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-reviews', JSON.stringify(reviews)) }, [reviews, hydrated])
+  useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-orders', JSON.stringify(orders)) }, [orders, hydrated])
   useEffect(() => {
-    if (user) window.localStorage.setItem('akwaaba-user', JSON.stringify(user))
-    else window.localStorage.removeItem('akwaaba-user')
-  }, [user])
-  useEffect(() => { window.localStorage.setItem('akwaaba-accounts', JSON.stringify(accounts)) }, [accounts])
+    if (!hydrated) return
+    if (user) window.localStorage.setItem('account_session_active', JSON.stringify(user))
+    else window.localStorage.removeItem('account_session_active')
+  }, [user, hydrated])
+  useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-accounts', JSON.stringify(accounts)) }, [accounts, hydrated])
 
   const value = useMemo<StoreValue>(() => {
     const findProduct = (id: number) => products.find((p) => p.id === id)
