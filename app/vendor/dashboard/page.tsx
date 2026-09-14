@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Boxes, Package, Plus, Star, TrendingUp } from 'lucide-react'
+import { Boxes, ImagePlus, Package, Plus, Star, TrendingUp, X } from 'lucide-react'
 import { SiteNav } from '@/components/site-nav'
 import { formatPrice, useStore } from '@/lib/store'
 
@@ -10,16 +10,18 @@ const categories = ['Fragrances & Beauty', 'Fashion & Bags', 'Phones & Tablets',
 
 export default function VendorDashboardPage() {
   const { products, addProduct, orders, ratingFor } = useStore()
-  const [form, setForm] = useState({ name: '', price: '', category: categories[0], description: '' })
+  const [form, setForm] = useState({ name: '', price: '', category: categories[0], description: '', image: '' })
   const [justAdded, setJustAdded] = useState<string | null>(null)
+  const [imageName, setImageName] = useState('')
 
   const handleAdd = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     const price = Number.parseFloat(form.price)
     if (!form.name || Number.isNaN(price) || price <= 0) return
-    const product = addProduct({ name: form.name, price, category: form.category, description: form.description })
+    const product = addProduct({ name: form.name, price, category: form.category, description: form.description, image: form.image })
     setJustAdded(product.name)
-    setForm({ name: '', price: '', category: categories[0], description: '' })
+    setForm({ name: '', price: '', category: categories[0], description: '', image: '' })
+    setImageName('')
   }
 
   const stats = useMemo(() => {
@@ -67,6 +69,23 @@ export default function VendorDashboardPage() {
                 <select id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring">
                   {categories.map((category) => <option key={category}>{category}</option>)}
                 </select>
+              </div>
+              <div>
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <label className="block text-sm font-medium" htmlFor="product-image">Product photo</label>
+                  {imageName && <button type="button" onClick={() => { setForm({ ...form, image: '' }); setImageName('') }} className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"><X className="size-3" /> Remove</button>}
+                </div>
+                <label htmlFor="product-image" className="flex cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-dashed border-input bg-background transition hover:border-primary hover:bg-primary/5">
+                  {form.image ? <img src={form.image} alt="Selected product preview" className="h-40 w-full object-cover" /> : <span className="flex h-32 flex-col items-center justify-center gap-2 px-4 text-center text-sm text-muted-foreground"><ImagePlus className="size-6 text-primary" /> Choose a clear product photo</span>}
+                </label>
+                <input id="product-image" type="file" accept="image/*" className="sr-only" onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (!file) return
+                  const reader = new FileReader()
+                  reader.onload = () => { if (typeof reader.result === 'string') { setForm({ ...form, image: reader.result }); setImageName(file.name) } }
+                  reader.readAsDataURL(file)
+                }} />
+                {imageName && <p className="mt-1.5 truncate text-xs text-muted-foreground">{imageName}</p>}
               </div>
               <div>
                 <label className="mb-1.5 block text-sm font-medium" htmlFor="description">Description</label>

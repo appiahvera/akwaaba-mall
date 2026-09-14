@@ -1,0 +1,17 @@
+{
+  "name": "Akwaaba Mall",
+  "short_name": "Akwaaba Mall",
+  "description": "Ghana's everyday marketplace for trusted local vendors.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fffaf0",
+  "theme_color": "#d97706",
+  "icons": [
+    {
+      "src": "/icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

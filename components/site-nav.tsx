@@ -36,7 +36,7 @@ export function SiteNav() {
 
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-4 lg:px-8">
         <Link href="/" className="mr-auto flex items-center gap-2" aria-label="Akwaaba Mall home">
-          <span className="grid size-9 place-items-center rounded-xl bg-primary text-lg font-bold text-primary-foreground">A</span>
+          <img src="/icon.png" alt="Akwaaba Mall" className="size-9 rounded-xl object-cover" />
           <span className="text-lg font-bold tracking-tight">Akwaaba<span className="text-primary"> Mall</span></span>
         </Link>
         <nav className="flex items-center gap-1 text-sm" aria-label="Primary">
