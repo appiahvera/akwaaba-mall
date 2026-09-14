@@ -26,6 +26,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
     email: '',
     password: '',
     phone: '',
+    storeName: '',
+    whatsapp: '',
     region: 'Greater Accra',
     plan: 'basic' as 'basic' | 'pro' | 'gold',
   })
@@ -49,6 +51,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
       email: '',
       password: '',
       phone: '',
+      storeName: '',
+      whatsapp: '',
       region: 'Greater Accra',
       plan: 'basic',
     })
@@ -91,6 +95,11 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
           setLoading(false)
           return
         }
+        if (role === 'vendor' && (!form.storeName || !form.whatsapp)) {
+          setError('Store name and WhatsApp number are required for vendors.')
+          setLoading(false)
+          return
+        }
         register({
           name: form.name,
           email: form.email,
@@ -98,6 +107,8 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
           phone: form.phone,
           region: form.region,
           role,
+          storeName: role === 'vendor' ? form.storeName : undefined,
+          whatsapp: role === 'vendor' ? form.whatsapp : undefined,
         })
         onClose()
         if (role === 'vendor') {
@@ -199,6 +210,44 @@ export function AuthModal({ isOpen, onClose, initialMode = 'login', initialRole 
                   placeholder="e.g. 024 123 4567"
                 />
               </div>
+
+              {role === 'vendor' && (
+                <>
+                  <div>
+                    <label htmlFor="storeName" className="text-xs font-medium text-muted-foreground">
+                      Store name
+                    </label>
+                    <input
+                      id="storeName"
+                      type="text"
+                      name="storeName"
+                      required
+                      value={form.storeName}
+                      onChange={handleInputChange}
+                      className="mt-1.5 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      placeholder="e.g. Ama's Beauty Store"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="whatsapp" className="text-xs font-medium text-muted-foreground">
+                      WhatsApp number
+                    </label>
+                    <input
+                      id="whatsapp"
+                      type="tel"
+                      name="whatsapp"
+                      required
+                      value={form.whatsapp}
+                      onChange={handleInputChange}
+                      pattern="(?:\\+233|0)[2-5][0-9]{8}"
+                      className="mt-1.5 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                      placeholder="e.g. 024 123 4567"
+                    />
+                    <p className="mt-1 text-[11px] text-muted-foreground">Buyers will reach you here via the &ldquo;Chat on WhatsApp&rdquo; button.</p>
+                  </div>
+                </>
+              )}
 
               <div>
                 <label htmlFor="region" className="text-xs font-medium text-muted-foreground">

@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronLeft, MessageCircle, ShoppingBag, Star } from 'lucide-react'
 import { SiteNav } from '@/components/site-nav'
-import { formatPrice, useStore } from '@/lib/store'
+import { formatPrice, useStore, whatsappLink } from '@/lib/store'
 
 export default function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -32,7 +32,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
 
   const reviews = reviewsFor(product.id)
   const { average, count } = ratingFor(product.id)
-  const whatsApp = `https://wa.me/233500000000?text=${encodeURIComponent(`Hi! I'm interested in buying ${product.name} (${formatPrice(product.price)}) on Akwaaba Mall.`)}`
+  const whatsApp = whatsappLink(product.sellerWhatsapp, `Hi! I'm interested in buying ${product.name} (${formatPrice(product.price)}) on Akwaaba Mall.`)
 
   const handleAddToCart = () => {
     addToCart(product.id)
@@ -74,7 +74,7 @@ export default function ProductPage({ params }: { params: Promise<{ id: string }
             <div className="mt-7 grid gap-3">
               <button onClick={handleAddToCart} className="flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"><ShoppingBag className="size-4" /> Add to shopping bag</button>
               {added && <Link href="/checkout" className="text-center text-sm font-semibold text-primary">Added — go to checkout</Link>}
-              <a href={whatsApp} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-xl border border-primary px-4 py-3 text-sm font-semibold text-primary"><MessageCircle className="size-4" /> Chat with seller on WhatsApp</a>
+              <a href={whatsApp} target="_blank" rel="noreferrer" className="flex items-center justify-center gap-2 rounded-xl border border-primary px-4 py-3 text-sm font-semibold text-primary"><MessageCircle className="size-4" /> Chat on WhatsApp</a>
             </div>
           </div>
         </div>

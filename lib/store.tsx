@@ -8,6 +8,7 @@ export type Product = {
   price: number
   category: string
   seller: string
+  sellerWhatsapp: string
   image: string
   description: string
 }
@@ -43,12 +44,26 @@ export type User = {
   phone: string
   region: string
   role: 'buyer' | 'vendor'
+  storeName?: string
+  whatsapp?: string
 }
 
 export const PLATFORM_FEE_RATE = 0.05
 
 export function formatPrice(price: number) {
   return `GH\u20B5 ${price.toLocaleString('en-GH')}`
+}
+
+export function whatsappLink(number: string | undefined, text: string) {
+  const digits = (number || '').replace(/\D/g, '')
+  const intl = digits.startsWith('233')
+    ? digits
+    : digits.startsWith('0')
+      ? `233${digits.slice(1)}`
+      : digits
+        ? `233${digits}`
+        : '233500000000'
+  return `https://wa.me/${intl}?text=${encodeURIComponent(text)}`
 }
 
 type StoreValue = {
@@ -141,7 +156,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           name,
           price,
           category,
-          seller: seller || user?.name || 'Akwaaba Vendor',
+          seller: seller || user?.storeName || user?.name || 'Akwaaba Vendor',
+          sellerWhatsapp: user?.whatsapp || user?.phone || '',
           image: image || '/placeholder.svg?height=480&width=480',
           description: description || `Quality ${category.toLowerCase()} listed by a trusted Ghanaian vendor on Akwaaba Mall.`,
         }
@@ -196,12 +212,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       register: (input) => {
         const account = { ...input, role: input.role ?? 'buyer' }
         setAccounts((prev) => [...prev.filter((a) => a.email !== input.email), account])
-        setUser({ name: input.name, email: input.email, phone: input.phone, region: input.region, role: account.role })
+        setUser({ name: input.name, email: input.email, phone: input.phone, region: input.region, role: account.role, storeName: input.storeName, whatsapp: input.whatsapp })
       },
       login: (email, password) => {
         const match = accounts.find((a) => a.email === email && a.password === password)
         if (match) {
-          setUser({ name: match.name, email: match.email, phone: match.phone, region: match.region, role: match.role ?? 'buyer' })
+          setUser({ name: match.name, email: match.email, phone: match.phone, region: match.region, role: match.role ?? 'buyer', storeName: match.storeName, whatsapp: match.whatsapp })
           return true
         }
         return false
