@@ -21,7 +21,11 @@ export const metadata: Metadata = {
     images: [{ url: '/placeholder.svg?height=630&width=1200', width: 1200, height: 630, alt: 'Akwaaba Mall marketplace' }],
   },
   twitter: { card: 'summary_large_image', title: 'Akwaaba Mall | Shop Ghana Online', description: 'Ghana’s everyday marketplace for trusted local vendors.' },
-  icons: { icon: '/favicon.ico' },
+  icons: {
+    icon: '/akwaaba-logo.png',
+    apple: '/akwaaba-logo.png',
+  },
+  manifest: '/manifest.webmanifest',
 }
 
 export default function RootLayout({

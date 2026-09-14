@@ -92,7 +92,7 @@ type StoreValue = {
   orders: Order[]
   cart: CartLine[]
   user: User | null
-  addProduct: (input: { name: string; price: number; category: string; seller?: string; description?: string }) => Product
+  addProduct: (input: { name: string; price: number; category: string; seller?: string; description?: string; image?: string }) => Product
   addReview: (input: { productId: number; rating: number; text: string }) => void
   reviewsFor: (productId: number) => Review[]
   ratingFor: (productId: number) => { average: number; count: number }
@@ -135,14 +135,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       orders,
       cart,
       user,
-      addProduct: ({ name, price, category, seller, description }) => {
+      addProduct: ({ name, price, category, seller, description, image }) => {
         const product: Product = {
           id: Date.now(),
           name,
           price,
           category,
           seller: seller || user?.name || 'Akwaaba Vendor',
-          image: '/placeholder.svg?height=480&width=480',
+          image: image || '/placeholder.svg?height=480&width=480',
           description: description || `Quality ${category.toLowerCase()} listed by a trusted Ghanaian vendor on Akwaaba Mall.`,
         }
         setProducts((prev) => [product, ...prev])
