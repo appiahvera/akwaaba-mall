@@ -3,21 +3,23 @@
 import { useMemo, useState } from 'react'
 import { Search, ShoppingBag, UserRound, Menu, Heart, Star, MapPin, ChevronRight, SlidersHorizontal, X, MessageCircle, ShieldCheck, Truck, Sparkles } from 'lucide-react'
 import { AuthModal } from '@/components/auth-modal'
+import { useStore, formatPrice as formatStorePrice, type Product } from '@/lib/store'
 
 const regions = ['Greater Accra', 'Ashanti', 'Northern', 'Western', 'Eastern', 'Central', 'Volta', 'Bono', 'Ahafo', 'Bono East', 'Upper East', 'Upper West', 'Oti', 'Savannah', 'North East', 'Western North']
 const categories = ['All products', 'Baby, Kids & Toys', 'Fragrances & Beauty', 'Fashion & Bags', 'Phones & Tablets', 'Electronics', 'Home & Kitchen', 'Groceries & Provisions', 'Health & Personal Care', 'General Items']
-const products = [
-  { id: 1, name: 'Glow Radiance Body Mist', category: 'Fragrances & Beauty', price: 185, old: 220, rating: 4.8, reviews: 24, seller: 'Nana Beauty Hub', image: '/placeholder.svg?height=480&width=480', badge: 'Bestseller' },
-  { id: 2, name: 'Samsung Galaxy A15 128GB', category: 'Phones & Tablets', price: 2499, old: 2799, rating: 4.9, reviews: 41, seller: 'Tech Junction GH', image: '/placeholder.svg?height=480&width=480', badge: 'Top rated' },
-  { id: 3, name: 'Kente Print Everyday Tote', category: 'Fashion & Bags', price: 145, old: 180, rating: 4.7, reviews: 18, seller: 'Adwoa Finds', image: '/placeholder.svg?height=480&width=480', badge: 'New' },
-  { id: 4, name: 'Premium Baby Diapers • Size 4', category: 'Baby, Kids & Toys', price: 210, old: 245, rating: 4.8, reviews: 33, seller: 'Little Sprouts', image: '/placeholder.svg?height=480&width=480', badge: 'Popular' },
-  { id: 5, name: 'Non-stick Cookware Set', category: 'Home & Kitchen', price: 680, old: 760, rating: 4.6, reviews: 12, seller: 'Home Comfort GH', image: '/placeholder.svg?height=480&width=480', badge: 'Deal' },
-  { id: 6, name: 'Natural Shea Butter • 500g', category: 'Health & Personal Care', price: 78, old: 95, rating: 4.9, reviews: 56, seller: 'Savanna Naturals', image: '/placeholder.svg?height=480&width=480', badge: 'Made in Ghana' },
-]
+function formatPrice(price: number) { return formatStorePrice(price) }
 
-function formatPrice(price: number) { return `GH₵ ${price.toLocaleString('en-GH')}` }
+type DisplayProduct = Product & { old: number; rating: number; reviews: number; badge: string }
 
 export default function HomePage() {
+  const { products: marketplaceProducts, user } = useStore()
+  const products: DisplayProduct[] = marketplaceProducts.map((product) => ({
+    ...product,
+    old: product.price,
+    rating: 0,
+    reviews: 0,
+    badge: 'New listing',
+  }))
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('All products')
   const [region, setRegion] = useState('Greater Accra')
@@ -28,8 +30,8 @@ export default function HomePage() {
   const [showAccount, setShowAccount] = useState(false)
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [accountRole, setAccountRole] = useState<'buyer' | 'vendor'>('buyer')
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
-  const [accountName, setAccountName] = useState('')
+  const isLoggedIn = Boolean(user)
+  const accountName = user?.name ?? ''
   const [authForm, setAuthForm] = useState({ name: '', phone: '', email: '', password: '', region: 'Greater Accra', storeName: '', payoutNumber: '' })
   const [selectedProduct, setSelectedProduct] = useState<(typeof products)[number] | null>(null)
   const [paymentStatus, setPaymentStatus] = useState<'idle' | 'held' | 'released'>('idle')
@@ -45,8 +47,6 @@ export default function HomePage() {
 
   const handleAuthSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setIsLoggedIn(true)
-    setAccountName(authForm.name || authForm.email.split('@')[0] || (accountRole === 'vendor' ? 'Vendor' : 'Buyer'))
     setShowAccount(false)
   }
 

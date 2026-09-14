@@ -9,7 +9,8 @@ import { formatPrice, useStore } from '@/lib/store'
 const categories = ['Fragrances & Beauty', 'Fashion & Bags', 'Phones & Tablets', 'Electronics', 'Home & Kitchen', 'Groceries & Provisions', 'Health & Personal Care', 'Baby, Kids & Toys', 'General Items']
 
 export default function VendorDashboardPage() {
-  const { products, addProduct, orders, ratingFor } = useStore()
+  const { products, addProduct, orders, ratingFor, user } = useStore()
+  const vendorProducts = products.filter((product) => !user || product.seller === user.name)
   const [form, setForm] = useState({ name: '', price: '', category: categories[0], description: '', image: '' })
   const [justAdded, setJustAdded] = useState<string | null>(null)
   const [imageName, setImageName] = useState('')
@@ -28,8 +29,8 @@ export default function VendorDashboardPage() {
     const orderedItems = orders.flatMap((order) => order.items)
     const unitsSold = orderedItems.reduce((sum, item) => sum + item.qty, 0)
     const revenue = orderedItems.reduce((sum, item) => sum + item.price * item.qty, 0)
-    return { listings: products.length, unitsSold, revenue, orders: orders.length }
-  }, [orders, products.length])
+    return { listings: vendorProducts.length, unitsSold, revenue, orders: orders.length }
+  }, [orders, vendorProducts.length])
 
   return (
     <main className="min-h-screen bg-background text-foreground">
@@ -99,7 +100,7 @@ export default function VendorDashboardPage() {
           <div className="rounded-3xl border border-border bg-card p-6">
             <h2 className="flex items-center gap-2 text-lg font-bold"><Package className="size-5 text-primary" /> Your listings</h2>
             <div className="mt-5 divide-y divide-border">
-              {products.map((product) => {
+              {vendorProducts.length === 0 ? <p className="py-12 text-center text-sm text-muted-foreground">Your published products will appear here.</p> : vendorProducts.map((product) => {
                 const rating = ratingFor(product.id)
                 return (
                   <div key={product.id} className="flex items-center gap-4 py-4">
