@@ -4,30 +4,28 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { CheckCircle2, Loader2, Lock, ShieldCheck, Trash2 } from 'lucide-react'
 import { SiteNav } from '@/components/site-nav'
-import { formatPrice, PLATFORM_FEE_RATE, REGION_FEES, useStore, type Order } from '@/lib/store'
+import { formatPrice, PLATFORM_FEE_RATE, useStore, type Order } from '@/lib/store'
 
 type Phase = 'cart' | 'paying' | 'held' | 'released'
 
 export default function CheckoutPage() {
   const { cart, products, removeFromCart, placeOrder, releaseOrder, user } = useStore()
-  const [region, setRegion] = useState(user?.region ?? 'Greater Accra')
+  const region = user?.region ?? 'Greater Accra'
   const [phase, setPhase] = useState<Phase>('cart')
   const [order, setOrder] = useState<Order | null>(null)
-
-  const deliveryFee = REGION_FEES.find((item) => item.name === region)?.fee ?? 30
 
   const lines = useMemo(
     () => cart.map((line) => ({ ...line, product: products.find((p) => p.id === line.productId)! })).filter((line) => line.product),
     [cart, products],
   )
   const subtotal = lines.reduce((sum, line) => sum + line.product.price * line.qty, 0)
-  const total = subtotal + deliveryFee
+  const total = subtotal
 
   const handlePay = () => {
     if (lines.length === 0) return
     setPhase('paying')
     setTimeout(() => {
-      const placed = placeOrder({ region, deliveryFee })
+      const placed = placeOrder({ region })
       setOrder(placed)
       setPhase('held')
     }, 1600)
@@ -81,25 +79,24 @@ export default function CheckoutPage() {
                 </div>
               ))}
             </div>
-
-            <div className="mt-4 border-t border-border pt-4">
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="region">Delivery region</label>
-              <select id="region" value={region} onChange={(e) => setRegion(e.target.value)} disabled={phase !== 'cart'} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring disabled:opacity-60">
-                {REGION_FEES.map((item) => <option key={item.name} value={item.name}>{item.name} — {formatPrice(item.fee)} delivery</option>)}
-              </select>
-            </div>
           </div>
 
           <div className="h-fit rounded-3xl border border-border bg-card p-6">
             <h2 className="text-lg font-bold">Order summary</h2>
             <dl className="mt-4 space-y-2 text-sm">
-              <div className="flex justify-between"><dt className="text-muted-foreground">Subtotal</dt><dd className="font-medium">{formatPrice(subtotal)}</dd></div>
-              <div className="flex justify-between"><dt className="text-muted-foreground">Delivery ({region})</dt><dd className="font-medium">{formatPrice(deliveryFee)}</dd></div>
+              <div className="flex justify-between"><dt className="text-muted-foreground">Item price</dt><dd className="font-medium">{formatPrice(subtotal)}</dd></div>
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold"><dt>Total</dt><dd>{formatPrice(total)}</dd></div>
             </dl>
+            <p className="mt-3 text-xs leading-5 text-muted-foreground">Delivery cost is not included in this checkout and will be agreed upon directly with the seller via chat.</p>
 
             {phase === 'cart' && (
-              <button onClick={handlePay} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"><Lock className="size-4" /> Pay with Paystack</button>
+              <>
+                <div className="mt-5 flex items-start gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3 text-xs leading-5 text-foreground">
+                  <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+                  <p><span className="font-semibold">🔒 Buyer Protection Active:</span> Pay for your item directly in-app to protect your money in escrow until delivery. Never pay sellers directly outside the app.</p>
+                </div>
+                <button onClick={handlePay} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"><Lock className="size-4" /> Pay Now</button>
+              </>
             )}
             {phase === 'paying' && (
               <p className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-muted py-3 text-sm font-semibold text-muted-foreground"><Loader2 className="size-4 animate-spin" /> Connecting to Paystack…</p>
