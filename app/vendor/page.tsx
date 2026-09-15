@@ -5,16 +5,18 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ChevronRight, ShieldCheck, Store, TrendingUp, Wallet } from 'lucide-react'
 import { SiteNav } from '@/components/site-nav'
+import { useStore } from '@/lib/store'
 
 const regions = ['Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern', 'Volta', 'Northern', 'Upper East', 'Upper West']
-const categories = ['Fragrances & Beauty', 'Fashion & Bags', 'Phones & Tablets', 'Electronics', 'Home & Kitchen', 'Groceries & Provisions', 'Health & Personal Care', 'Baby, Kids & Toys', 'General Items']
 
 export default function VendorRegisterPage() {
   const router = useRouter()
-  const [form, setForm] = useState({ businessName: '', phone: '', region: 'Greater Accra', category: 'Fragrances & Beauty' })
+  const { register } = useStore()
+  const [form, setForm] = useState({ name: '', storeName: '', phone: '', whatsapp: '', region: 'Greater Accra', email: '' })
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    register({ ...form, role: 'vendor', password: `vendor-${Date.now()}` })
     router.push('/vendor/dashboard')
   }
 
@@ -35,30 +37,38 @@ export default function VendorRegisterPage() {
         </div>
 
         <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
-          <h2 className="text-xl font-bold">Create your vendor account</h2>
-          <p className="mt-1 text-sm text-muted-foreground">No listing fees. Start selling today.</p>
+          <h2 className="text-xl font-bold">Register your store</h2>
+          <p className="mt-1 text-sm text-muted-foreground">Create your vendor profile and start listing immediately.</p>
           <form onSubmit={handleSubmit} className="mt-6 grid gap-4">
             <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="businessName">Shop / business name</label>
-              <input id="businessName" required value={form.businessName} onChange={(e) => setForm({ ...form, businessName: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="e.g. Adwoa Finds" />
+              <label className="mb-1.5 block text-sm font-medium" htmlFor="name">Full name</label>
+              <input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="Your full name" />
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="phone">Ghana phone number (Mobile Money)</label>
-              <input id="phone" required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="024 123 4567" />
+              <label className="mb-1.5 block text-sm font-medium" htmlFor="storeName">Store name</label>
+              <input id="storeName" required value={form.storeName} onChange={(e) => setForm({ ...form, storeName: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="e.g. Adwoa Finds" />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium" htmlFor="phone">Phone number</label>
+                <input id="phone" required type="tel" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="024 123 4567" />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium" htmlFor="whatsapp">WhatsApp number</label>
+                <input id="whatsapp" required type="tel" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="024 123 4567" />
+              </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="region">Primary region</label>
+              <label className="mb-1.5 block text-sm font-medium" htmlFor="region">Location / region</label>
               <select id="region" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring">
                 {regions.map((region) => <option key={region}>{region}</option>)}
               </select>
             </div>
             <div>
-              <label className="mb-1.5 block text-sm font-medium" htmlFor="category">Product category</label>
-              <select id="category" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring">
-                {categories.map((category) => <option key={category}>{category}</option>)}
-              </select>
+              <label className="mb-1.5 block text-sm font-medium" htmlFor="email">Email address</label>
+              <input id="email" required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="you@example.com" />
             </div>
-            <button type="submit" className="mt-2 flex items-center justify-center gap-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Create vendor account <ChevronRight className="size-4" /></button>
+            <button type="submit" className="mt-2 flex items-center justify-center gap-1 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Register Store <ChevronRight className="size-4" /></button>
             <p className="text-center text-sm text-muted-foreground">Already selling? <Link href="/vendor/dashboard" className="font-semibold text-primary">Go to dashboard</Link></p>
           </form>
         </div>
