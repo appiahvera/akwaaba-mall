@@ -7,7 +7,7 @@ import { ChevronRight, ShieldCheck, Store, TrendingUp, Wallet } from 'lucide-rea
 import { SiteNav } from '@/components/site-nav'
 import { useStore } from '@/lib/store'
 
-const regions = ['Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern', 'Volta', 'Northern', 'Upper East', 'Upper West']
+const regions = ['Greater Accra', 'Ashanti', 'Western', 'Central', 'Eastern', 'Volta', 'Northern', 'Upper East', 'Upper West', 'Bono', 'Ahafo', 'Bono East', 'Oti', 'Savannah', 'North East', 'Western North']
 
 export default function VendorRegisterPage() {
   const router = useRouter()
