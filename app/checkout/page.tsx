@@ -87,13 +87,13 @@ export default function CheckoutPage() {
               <div className="flex justify-between"><dt className="text-muted-foreground">Item price</dt><dd className="font-medium">{formatPrice(subtotal)}</dd></div>
               <div className="flex justify-between border-t border-border pt-2 text-base font-bold"><dt>Total</dt><dd>{formatPrice(total)}</dd></div>
             </dl>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">Delivery cost is not included in this checkout and will be agreed upon directly with the seller via chat.</p>
+            <p className="mt-3 text-xs leading-5 text-muted-foreground">Delivery cost is negotiable and arranged directly with the seller during or after chat.</p>
 
             {phase === 'cart' && (
               <>
                 <div className="mt-5 flex items-start gap-2 rounded-2xl border border-primary/20 bg-primary/5 p-3 text-xs leading-5 text-foreground">
                   <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
-                  <p><span className="font-semibold">🔒 Buyer Protection Active:</span> Pay for your item directly in-app to protect your money in escrow until delivery. Never pay sellers directly outside the app.</p>
+                  <p><span className="font-semibold">⚠️ Security Notice:</span> Pay directly inside Akwaaba Mall. Never send money outside the app or share your PIN.</p>
                 </div>
                 <button onClick={handlePay} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"><Lock className="size-4" /> Pay Now</button>
               </>

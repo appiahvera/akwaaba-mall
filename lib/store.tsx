@@ -105,17 +105,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedProducts = window.localStorage.getItem('akwaaba-products')
       const savedReviews = window.localStorage.getItem('akwaaba-reviews')
       const savedOrders = window.localStorage.getItem('akwaaba-orders')
+      const savedCart = window.localStorage.getItem('akwaaba-cart')
       const savedUser = window.localStorage.getItem('account_session_active')
       const savedAccounts = window.localStorage.getItem('akwaaba-accounts')
       if (savedProducts) setProducts(JSON.parse(savedProducts))
       if (savedReviews) setReviews(JSON.parse(savedReviews))
       if (savedOrders) setOrders(JSON.parse(savedOrders))
+      if (savedCart) setCart(JSON.parse(savedCart))
       if (savedUser) setUser(JSON.parse(savedUser))
       if (savedAccounts) setAccounts(JSON.parse(savedAccounts))
     } catch {
       window.localStorage.removeItem('akwaaba-products')
       window.localStorage.removeItem('akwaaba-reviews')
       window.localStorage.removeItem('akwaaba-orders')
+      window.localStorage.removeItem('akwaaba-cart')
       window.localStorage.removeItem('account_session_active')
       window.localStorage.removeItem('akwaaba-accounts')
     }
@@ -125,6 +128,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-products', JSON.stringify(products)) }, [products, hydrated])
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-reviews', JSON.stringify(reviews)) }, [reviews, hydrated])
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-orders', JSON.stringify(orders)) }, [orders, hydrated])
+  useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-cart', JSON.stringify(cart)) }, [cart, hydrated])
   useEffect(() => {
     if (!hydrated) return
     if (user) window.localStorage.setItem('account_session_active', JSON.stringify(user))
