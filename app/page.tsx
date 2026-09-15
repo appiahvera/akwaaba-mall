@@ -26,7 +26,8 @@ export default function HomePage() {
   const [saved, setSaved] = useState<number[]>([])
   const [menuOpen, setMenuOpen] = useState(false)
   const [showCheckout, setShowCheckout] = useState(false)
-  const [showAccount, setShowAccount] = useState(false)
+  // Authentication is opt-in: guests can browse, search, view products, and use the cart freely.
+  const [showAccount, setShowAccount] = useState<boolean>(false)
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login')
   const [accountRole, setAccountRole] = useState<'buyer' | 'vendor'>('buyer')
   const isLoggedIn = Boolean(user)
