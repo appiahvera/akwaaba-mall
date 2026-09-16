@@ -1,6 +1,7 @@
 'use client'
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { supabase } from '@/lib/supabase'
 
 export type Product = {
   id: number
@@ -50,6 +51,24 @@ export type User = {
 
 export const PLATFORM_FEE_RATE = 0.05
 
+function mapMarketplaceProduct(record: Record<string, unknown>): Product | null {
+  const id = Number(record.id ?? record.product_id)
+  const name = String(record.name ?? record.title ?? '').trim()
+  const price = Number(record.price ?? record.amount)
+  if (!Number.isFinite(id) || !name || !Number.isFinite(price)) return null
+
+  return {
+    id,
+    name,
+    price,
+    category: String(record.category ?? record.category_name ?? 'General Items'),
+    seller: String(record.seller ?? record.vendor ?? record.seller_name ?? 'Akwaaba Vendor'),
+    sellerWhatsapp: String(record.sellerWhatsapp ?? record.seller_whatsapp ?? record.whatsapp ?? record.phone ?? ''),
+    image: String(record.image ?? record.image_url ?? record.photo ?? '/placeholder.svg?height=480&width=480'),
+    description: String(record.description ?? `Quality ${String(record.category ?? 'general item').toLowerCase()} listed by a trusted Ghanaian vendor on Akwaaba Mall.`),
+  }
+}
+
 export function formatPrice(price: number) {
   return `GH\u20B5 ${price.toLocaleString('en-GH')}`
 }
@@ -68,6 +87,8 @@ export function whatsappLink(number: string | undefined, text: string) {
 
 type StoreValue = {
   products: Product[]
+  productsLoading: boolean
+  productsError: string | null
   reviews: Review[]
   orders: Order[]
   cart: CartLine[]
@@ -92,6 +113,8 @@ const StoreContext = createContext<StoreValue | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
+  const [productsLoading, setProductsLoading] = useState(true)
+  const [productsError, setProductsError] = useState<string | null>(null)
   const [reviews, setReviews] = useState<Review[]>([])
   const [orders, setOrders] = useState<Order[]>([])
   const [cart, setCart] = useState<CartLine[]>([])
@@ -122,6 +145,37 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setHydrated(true)
   }, [])
 
+  useEffect(() => {
+    let active = true
+    async function fetchMarketplaceProducts() {
+      if (!supabase) {
+        setProductsError('Marketplace connection is not configured.')
+        setProductsLoading(false)
+        return
+      }
+
+      const { data, error } = await supabase.from('Marketplace products').select('*')
+      if (!active) return
+      if (error) {
+        setProductsError('We could not load marketplace listings right now.')
+        setProductsLoading(false)
+        return
+      }
+
+      const remoteProducts = (data ?? []).map(mapMarketplaceProduct).filter((product): product is Product => product !== null)
+      setProducts((current) => {
+        const remoteIds = new Set(remoteProducts.map((product) => product.id))
+        const localProducts = current.filter((product) => !remoteIds.has(product.id))
+        return [...remoteProducts, ...localProducts]
+      })
+      setProductsError(null)
+      setProductsLoading(false)
+    }
+
+    void fetchMarketplaceProducts()
+    return () => { active = false }
+  }, [])
+
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-products', JSON.stringify(products)) }, [products, hydrated])
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-reviews', JSON.stringify(reviews)) }, [reviews, hydrated])
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-orders', JSON.stringify(orders)) }, [orders, hydrated])
@@ -146,6 +200,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     return {
       products,
+      productsLoading,
+      productsError,
       reviews,
       orders,
       cart,
