@@ -16,7 +16,7 @@ export function SiteNav() {
   const { cartCount, user } = useStore()
 
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 backdrop-blur">
+    <header className="sticky top-0 z-40 border-b border-border/80 bg-background/95 shadow-sm backdrop-blur">
       <div className="hidden border-b border-border/60 bg-muted/40 sm:block">
         <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-1.5 text-xs text-muted-foreground lg:px-8">
           <span className="flex items-center gap-1.5">
