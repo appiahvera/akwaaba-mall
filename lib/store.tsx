@@ -93,7 +93,7 @@ type StoreValue = {
   orders: Order[]
   cart: CartLine[]
   user: User | null
-  addProduct: (input: { name: string; price: number; category: string; seller?: string; description?: string; image?: string }) => Product
+  addProduct: (input: { name: string; price: number; category: string; seller?: string; description?: string; image?: string }) => Promise<Product>
   addReview: (input: { productId: number; rating: number; text: string }) => void
   reviewsFor: (productId: number) => Review[]
   ratingFor: (productId: number) => { average: number; count: number }
@@ -206,18 +206,26 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       orders,
       cart,
       user,
-      addProduct: ({ name, price, category, seller, description, image }) => {
-        const product: Product = {
-          id: Date.now(),
+      addProduct: async ({ name, price, category, seller, description, image }) => {
+        const sellerName = seller || user?.storeName || user?.name || 'Akwaaba Vendor'
+        const sellerWhatsapp = user?.whatsapp || user?.phone || ''
+        const productInput = {
           name,
           price,
           category,
-          seller: seller || user?.storeName || user?.name || 'Akwaaba Vendor',
-          sellerWhatsapp: user?.whatsapp || user?.phone || '',
+          seller: sellerName,
+          seller_whatsapp: sellerWhatsapp,
           image: image || '/placeholder.svg?height=480&width=480',
           description: description || `Quality ${category.toLowerCase()} listed by a trusted Ghanaian vendor on Akwaaba Mall.`,
         }
-        setProducts((prev) => [product, ...prev])
+
+        if (!supabase) throw new Error('Marketplace connection is not configured.')
+        const { data, error } = await supabase.from('Marketplace products').insert(productInput).select('*').single()
+        if (error) throw new Error('We could not publish this listing right now.')
+
+        const product = mapMarketplaceProduct(data)
+        if (!product) throw new Error('The published listing returned an invalid product record.')
+        setProducts((prev) => [product, ...prev.filter((item) => item.id !== product.id)])
         return product
       },
       addReview: ({ productId, rating, text }) => {
