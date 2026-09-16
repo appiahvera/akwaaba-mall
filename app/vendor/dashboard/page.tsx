@@ -15,14 +15,25 @@ export default function VendorDashboardPage() {
   const [justAdded, setJustAdded] = useState<string | null>(null)
   const [imageName, setImageName] = useState('')
 
-  const handleAdd = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault()
-    const price = Number.parseFloat(form.price)
-    if (!form.name || Number.isNaN(price) || price <= 0) return
-    const product = addProduct({ name: form.name, price, category: form.category, description: form.description, image: form.image })
+  const [publishError, setPublishError] = useState('')
+  const [isPublishing, setIsPublishing] = useState(false)
+
+  const handleAdd = async (event: React.FormEvent<HTMLFormElement>) => {
+  event.preventDefault()
+  const price = Number.parseFloat(form.price)
+  if (!form.name || Number.isNaN(price) || price <= 0 || isPublishing) return
+  setPublishError('')
+  setIsPublishing(true)
+  try {
+    const product = await addProduct({ name: form.name, price, category: form.category, description: form.description, image: form.image })
     setJustAdded(product.name)
     setForm({ name: '', price: '', category: categories[0], description: '', image: '' })
     setImageName('')
+  } catch (error) {
+    setPublishError(error instanceof Error ? error.message : 'We could not publish this listing right now.')
+  } finally {
+    setIsPublishing(false)
+  }
   }
 
   const stats = useMemo(() => {
@@ -92,8 +103,9 @@ export default function VendorDashboardPage() {
                 <label className="mb-1.5 block text-sm font-medium" htmlFor="description">Description</label>
                 <textarea id="description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="min-h-24 w-full rounded-xl border border-input bg-background px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-ring" placeholder="Tell buyers what makes this item special." />
               </div>
-              <button type="submit" className="rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90">Publish item</button>
-              {justAdded && <p className="rounded-xl bg-primary/10 p-3 text-sm font-medium text-primary">&ldquo;{justAdded}&rdquo; is now live on Akwaaba Mall.</p>}
+  <button type="submit" disabled={isPublishing} className="rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60">{isPublishing ? 'Publishing...' : 'Publish item'}</button>
+  {justAdded && <p className="rounded-xl bg-primary/10 p-3 text-sm font-medium text-primary">&ldquo;{justAdded}&rdquo; is now live on Akwaaba Mall.</p>}
+  {publishError && <p role="alert" className="rounded-xl bg-destructive/10 p-3 text-sm font-medium text-destructive">{publishError}</p>}
             </form>
           </div>
 
