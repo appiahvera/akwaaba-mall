@@ -154,13 +154,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const { data, error } = await supabase.from('Marketplace products').select('*')
+      const result = await Promise.race([
+        supabase.from('Marketplace products').select('*'),
+        new Promise<{ data: null; error: Error }>((resolve) => {
+          window.setTimeout(() => resolve({ data: null, error: new Error('Marketplace request timed out') }), 10000)
+        }),
+      ])
       if (!active) return
-      if (error) {
-        setProductsError('We could not load marketplace listings right now.')
+      if (result.error) {
+        setProductsError('We could not load marketplace listings right now. Please refresh and try again.')
         setProductsLoading(false)
         return
       }
+      const { data } = result
 
       const remoteProducts = (data ?? []).map(mapMarketplaceProduct).filter((product): product is Product => product !== null)
       setProducts((current) => {
