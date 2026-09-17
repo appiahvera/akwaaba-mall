@@ -160,15 +160,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      if (products.length === 0) setProductsLoading(true)
-      const controller = new AbortController()
-      const timeoutId = window.setTimeout(() => controller.abort(), 15000)
-
+      // Keep the current list visible while the database request is in flight.
+      // In particular, do not abort a slow first request and replace a populated
+      // local cache with an empty state before Supabase has answered.
       try {
         const { data, error } = await supabase
           .from('Marketplace products')
           .select('*')
-          .abortSignal(controller.signal)
         if (!active) return
 
         if (error) {
@@ -177,6 +175,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
 
         const remoteProducts = (data ?? []).map(mapMarketplaceProduct).filter((product): product is Product => product !== null)
+        // The database is authoritative for synced products, while locally cached
+        // listings remain visible if the request returns no rows or is unavailable.
         setProducts((current) => {
           const remoteIds = new Set(remoteProducts.map((product) => product.id))
           const localProducts = current.filter((product) => !remoteIds.has(product.id))
@@ -186,7 +186,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       } catch {
         if (active) setProductsError('We could not refresh marketplace listings right now. Showing available listings.')
       } finally {
-        window.clearTimeout(timeoutId)
         if (active) setProductsLoading(false)
       }
     }
