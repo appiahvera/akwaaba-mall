@@ -146,27 +146,34 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (!hydrated) return
+
     let active = true
     async function fetchMarketplaceProducts() {
       if (!supabase) {
-        setProductsError('Marketplace connection is not configured.')
-        setProductsLoading(false)
+        if (active) {
+          setProductsError('Marketplace connection is not configured.')
+          setProductsLoading(false)
+        }
         return
       }
 
-      const result = await Promise.race([
-        supabase.from('Marketplace products').select('*'),
-        new Promise<{ data: null; error: Error }>((resolve) => {
-          window.setTimeout(() => resolve({ data: null, error: new Error('Marketplace request timed out') }), 10000)
-        }),
-      ])
+      setProductsLoading(true)
+      const controller = new AbortController()
+      const timeoutId = window.setTimeout(() => controller.abort(), 15000)
+      const { data, error } = await supabase
+        .from('Marketplace products')
+        .select('*')
+        .abortSignal(controller.signal)
+      window.clearTimeout(timeoutId)
       if (!active) return
-      if (result.error) {
-        setProductsError('We could not load marketplace listings right now. Please refresh and try again.')
+
+      if (error) {
+        // Keep any already-loaded products visible when a refresh fails.
+        setProductsError('We could not refresh marketplace listings right now. Showing available listings.')
         setProductsLoading(false)
         return
       }
-      const { data } = result
 
       const remoteProducts = (data ?? []).map(mapMarketplaceProduct).filter((product): product is Product => product !== null)
       setProducts((current) => {
@@ -180,7 +187,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     void fetchMarketplaceProducts()
     return () => { active = false }
-  }, [])
+  }, [hydrated])
 
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-products', JSON.stringify(products)) }, [products, hydrated])
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-reviews', JSON.stringify(reviews)) }, [reviews, hydrated])
