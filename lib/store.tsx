@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export type Product = {
@@ -122,6 +122,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<(User & { password: string })[]>([])
 
   const [hydrated, setHydrated] = useState(false)
+  const localProductsLoaded = useRef(false)
 
   useEffect(() => {
     try {
@@ -131,6 +132,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       const savedUser = window.localStorage.getItem('account_session_active')
       const savedAccounts = window.localStorage.getItem('akwaaba-accounts')
       if (savedProducts) setProducts(JSON.parse(savedProducts))
+      localProductsLoaded.current = true
       if (savedReviews) setReviews(JSON.parse(savedReviews))
       if (savedOrders) setOrders(JSON.parse(savedOrders))
       if (savedUser) setUser(JSON.parse(savedUser))
@@ -158,38 +160,46 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      setProductsLoading(true)
+      if (products.length === 0) setProductsLoading(true)
       const controller = new AbortController()
       const timeoutId = window.setTimeout(() => controller.abort(), 15000)
-      const { data, error } = await supabase
-        .from('Marketplace products')
-        .select('*')
-        .abortSignal(controller.signal)
-      window.clearTimeout(timeoutId)
-      if (!active) return
 
-      if (error) {
-        // Keep any already-loaded products visible when a refresh fails.
-        setProductsError('We could not refresh marketplace listings right now. Showing available listings.')
-        setProductsLoading(false)
-        return
+      try {
+        const { data, error } = await supabase
+          .from('Marketplace products')
+          .select('*')
+          .abortSignal(controller.signal)
+        if (!active) return
+
+        if (error) {
+          setProductsError('We could not refresh marketplace listings right now. Showing available listings.')
+          return
+        }
+
+        const remoteProducts = (data ?? []).map(mapMarketplaceProduct).filter((product): product is Product => product !== null)
+        setProducts((current) => {
+          const remoteIds = new Set(remoteProducts.map((product) => product.id))
+          const localProducts = current.filter((product) => !remoteIds.has(product.id))
+          return [...remoteProducts, ...localProducts]
+        })
+        setProductsError(null)
+      } catch {
+        if (active) setProductsError('We could not refresh marketplace listings right now. Showing available listings.')
+      } finally {
+        window.clearTimeout(timeoutId)
+        if (active) setProductsLoading(false)
       }
-
-      const remoteProducts = (data ?? []).map(mapMarketplaceProduct).filter((product): product is Product => product !== null)
-      setProducts((current) => {
-        const remoteIds = new Set(remoteProducts.map((product) => product.id))
-        const localProducts = current.filter((product) => !remoteIds.has(product.id))
-        return [...remoteProducts, ...localProducts]
-      })
-      setProductsError(null)
-      setProductsLoading(false)
     }
 
     void fetchMarketplaceProducts()
     return () => { active = false }
   }, [hydrated])
 
-  useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-products', JSON.stringify(products)) }, [products, hydrated])
+  useEffect(() => {
+    if (hydrated && localProductsLoaded.current) {
+      window.localStorage.setItem('akwaaba-products', JSON.stringify(products))
+    }
+  }, [products, hydrated])
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-reviews', JSON.stringify(reviews)) }, [reviews, hydrated])
   useEffect(() => { if (hydrated) window.localStorage.setItem('akwaaba-orders', JSON.stringify(orders)) }, [orders, hydrated])
   useEffect(() => {
