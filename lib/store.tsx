@@ -164,11 +164,21 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       // In particular, do not abort a slow first request and replace a populated
       // local cache with an empty state before Supabase has answered.
       try {
-        const { data, error } = await supabase
+        let { data, error } = await supabase
           .from('Marketplace products')
           .select('*')
-        if (!active) return
 
+        // If the public key is blocked by table RLS, retry through the server-only
+        // route, which uses the configured Supabase service key without exposing it.
+        if (error) {
+          const fallbackResponse = await fetch('/api/marketplace-products', { cache: 'no-store' })
+          if (fallbackResponse.ok) {
+            data = await fallbackResponse.json()
+            error = null
+          }
+        }
+
+        if (!active) return
         if (error) {
           setProductsError('We could not refresh marketplace listings right now. Showing available listings.')
           return
