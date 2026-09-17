@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
-import Script from 'next/script'
 import { StoreProvider } from '@/lib/store'
 import './globals.css'
 
@@ -36,7 +35,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-sans antialiased">
-        <Script src="https://js.paystack.co/v1/inline.js" strategy="afterInteractive" />
         <StoreProvider>{children}</StoreProvider>
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ '@context': 'https://schema.org', '@type': 'WebApplication', name: 'Akwaaba Mall', applicationCategory: 'ShoppingApplication', description: 'Ghanaian e-commerce marketplace for trusted local vendors.' }) }} />
         {process.env.NODE_ENV === 'production' && <Analytics />}
