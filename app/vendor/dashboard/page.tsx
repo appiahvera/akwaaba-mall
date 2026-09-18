@@ -94,7 +94,24 @@ export default function VendorDashboardPage() {
                   const file = event.target.files?.[0]
                   if (!file) return
                   const reader = new FileReader()
-                  reader.onload = () => { if (typeof reader.result === 'string') { setForm({ ...form, image: reader.result }); setImageName(file.name) } }
+                  reader.onload = () => {
+                    if (typeof reader.result !== 'string') return
+                    const preview = new Image()
+                    preview.onload = () => {
+                      const maxDimension = 1200
+                      const scale = Math.min(1, maxDimension / Math.max(preview.width, preview.height))
+                      const canvas = document.createElement('canvas')
+                      canvas.width = Math.max(1, Math.round(preview.width * scale))
+                      canvas.height = Math.max(1, Math.round(preview.height * scale))
+                      const context = canvas.getContext('2d')
+                      if (!context) return
+                      context.drawImage(preview, 0, 0, canvas.width, canvas.height)
+                      const compressedImage = canvas.toDataURL('image/webp', 0.78)
+                      setForm((current) => ({ ...current, image: compressedImage }))
+                      setImageName(file.name)
+                    }
+                    preview.src = reader.result
+                  }
                   reader.readAsDataURL(file)
                 }} />
                 {imageName && <p className="mt-1.5 truncate text-xs text-muted-foreground">{imageName}</p>}
