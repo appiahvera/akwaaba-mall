@@ -154,7 +154,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         return
       }
 
-      const { data, error } = await supabase.from('Marketplace products').select('*')
+      const { data, error } = await supabase.from('marketplace_products').select('*')
       if (!active) return
       if (error) {
         setProductsError('We could not load marketplace listings right now.')
@@ -220,7 +220,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
 
         if (!supabase) throw new Error('Marketplace connection is not configured.')
-        const { data, error } = await supabase.from('Marketplace products').insert(productInput).select('*').single()
+        const { data, error } = await supabase.from('marketplace_products').insert(productInput).select('*').single()
         if (error) throw new Error('We could not publish this listing right now.')
 
         const product = mapMarketplaceProduct(data)

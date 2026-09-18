@@ -10,7 +10,7 @@ const categories = ['Fragrances & Beauty', 'Fashion & Bags', 'Phones & Tablets',
 
 export default function VendorDashboardPage() {
   const { products, addProduct, orders, ratingFor, user } = useStore()
-  const vendorProducts = products.filter((product) => !user || product.seller === user.name)
+  const vendorProducts = products.filter((product) => !user || product.seller === user.storeName || product.seller === user.name)
   const [form, setForm] = useState({ name: '', price: '', category: categories[0], description: '', image: '' })
   const [justAdded, setJustAdded] = useState<string | null>(null)
   const [imageName, setImageName] = useState('')
