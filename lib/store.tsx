@@ -220,8 +220,20 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         }
 
         if (!supabase) throw new Error('Marketplace connection is not configured.')
-        const { data, error } = await supabase.from('marketplace_products').insert(productInput).select('*').single()
-        if (error) throw new Error('We could not publish this listing right now.')
+
+        // A mobile upload can still exceed the request limit after client-side compression.
+        // Publish the listing without the optional photo rather than losing the whole listing.
+        let { data, error } = await supabase.from('marketplace_products').insert(productInput).select('*').single()
+        if (error && productInput.image.startsWith('data:')) {
+          const fallback = { ...productInput, image: '/placeholder.svg?height=480&width=480' }
+          const retry = await supabase.from('marketplace_products').insert(fallback).select('*').single()
+          data = retry.data
+          error = retry.error
+        }
+        if (error) {
+          console.error('[v0] Marketplace publish failed:', error)
+          throw new Error('We could not publish this listing right now. Please check the item name and price, then try again.')
+        }
 
         const product = mapMarketplaceProduct(data)
         if (!product) throw new Error('The published listing returned an invalid product record.')
