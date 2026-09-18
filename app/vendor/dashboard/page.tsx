@@ -98,7 +98,8 @@ export default function VendorDashboardPage() {
                     if (typeof reader.result !== 'string') return
                     const preview = new Image()
                     preview.onload = () => {
-                      const maxDimension = 1200
+                      // Keep the listing request small enough for Supabase/PostgREST on mobile networks.
+                      const maxDimension = 800
                       const scale = Math.min(1, maxDimension / Math.max(preview.width, preview.height))
                       const canvas = document.createElement('canvas')
                       canvas.width = Math.max(1, Math.round(preview.width * scale))
@@ -106,7 +107,7 @@ export default function VendorDashboardPage() {
                       const context = canvas.getContext('2d')
                       if (!context) return
                       context.drawImage(preview, 0, 0, canvas.width, canvas.height)
-                      const compressedImage = canvas.toDataURL('image/webp', 0.78)
+                      const compressedImage = canvas.toDataURL('image/webp', 0.62)
                       setForm((current) => ({ ...current, image: compressedImage }))
                       setImageName(file.name)
                     }
